@@ -1,0 +1,16 @@
+/node_modules
+/dist
+/build
+/dist-ssr
+/static
+/public
+/server
+/client
+/server.js
+/client.js
+/client.js.map
+/server.js.map
+
+.env
+/ai-testing/.env
+/ai-testing/node_modules

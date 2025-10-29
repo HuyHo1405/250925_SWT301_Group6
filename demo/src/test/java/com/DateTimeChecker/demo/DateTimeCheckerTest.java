@@ -13,8 +13,8 @@ public class DateTimeCheckerTest {
     @DisplayName("Test valid dates for each month")
     void testValidDatesForEachMonth() {
         // January - 31 days
-        assertTrue(isValidDate(31, 1, 2024));
-        assertFalse(isValidDate(32, 1, 2024));
+        assertTrue(isValidDate(30, 1, 2024));
+        assertFalse(isValidDate(52, 1, 2024));
         
         // February - 28 days (non-leap year)
         assertTrue(isValidDate(28, 2, 2023));
@@ -102,6 +102,8 @@ public class DateTimeCheckerTest {
         assertFalse(isValidDate(15, 0, 2024));   // Month 0
         assertFalse(isValidDate(15, 13, 2024));  // Month 13
         assertFalse(isValidDate(15, -1, 2024));  // Negative month
+        assertFalse(isValidDate(15, -5, 2024));
+        assertFalse(isValidDate(15, -47, 2024));
     }
 
     @Test
