@@ -18,6 +18,11 @@
 | ST-003 | High | Open | Date Validation | Accepts invalid characters in input fields |
 | ST-004 | Low | Open | UI/UX | No loading indicator during API call |
 | ST-005 | Medium | Open | Error Handling | Unclear error message for special characters |
+| ST-006 | Critical | Open | Backend API | Server crashes with NullPointerException on null fields |
+| ST-007 | High | Open | Backend API | API lacks independent server-side validation, vulnerable to bypass |
+| ST-008 | Medium | Open | Backend API | Generic error messages don't specify which field has error |
+| ST-009 | Medium | Open | Backend API | Generic exception messages are in Vietnamese, inconsistent |
+| ST-010 | Medium | Open | Frontend Input | Input fields allow paste of invalid characters |
 
 ---
 
@@ -283,25 +288,377 @@ try {
 
 ---
 
+### **Defect ID: ST-006**
+**Title:** Server crashes with NullPointerException when API receives null field values  
+**Severity:** Critical  
+**Priority:** Critical  
+**Status:** Open  
+**Reported By:** System Test Analysis  
+**Date Reported:** 2025-10-23  
+
+**Module/Component:** Backend API - Input Validation  
+**Environment:**
+- API Endpoint: POST /check
+- Request Body: `{"day": null, "month": null, "year": null}`
+- Spring Boot version: 3.5.6
+
+**Description:**  
+When API endpoint receives a request with null values in day, month, or year fields, the server throws `NullPointerException` because the code calls `.trim()` on null without checking. This causes server crash and returns HTTP 500 error to client.
+
+**Steps to Reproduce:**
+1. Use API client (Postman, curl, or direct JavaScript fetch) to send POST request:
+   ```json
+   POST http://localhost:8080/check
+   Content-Type: application/json
+   {
+     "day": null,
+     "month": null,
+     "year": null
+   }
+   ```
+2. Or send request with one field as null:
+   ```json
+   {
+     "day": null,
+     "month": "10",
+     "year": "2025"
+   }
+   ```
+3. Observe server error
+
+**Expected Result:**  
+- Server should handle null values gracefully
+- Return appropriate error message: "Error: Please enter all required fields (day, month, year)"
+- HTTP status should be 200 with error message in response body
+
+**Actual Result:**  
+- Server throws `NullPointerException`
+- HTTP 500 Internal Server Error returned
+- Stack trace exposed: `Cannot invoke "String.trim()" because the return value of "com.DateTimeChecker.demo.model.DateTimeModel.getDay()" is null`
+
+**Root Cause:**
+```java
+// DateTimeCheckerService.java, lines 23-25
+int year = Integer.parseInt(model.getYear().trim());  // NPE if getYear() is null
+int month = Integer.parseInt(model.getMonth().trim());  // NPE if getMonth() is null
+int day = Integer.parseInt(model.getDay().trim());  // NPE if getDay() is null
+```
+
+**Suggested Fix:**
+```java
+@Override
+public void process(DateTimeModel model) {
+    try {
+        if (model == null) {
+            throw new IllegalArgumentException("Input data is empty");
+        }
+        
+        // Validate null fields BEFORE calling trim()
+        if (model.getDay() == null || model.getMonth() == null || model.getYear() == null) {
+            model.setMessage("Error: Please enter all required fields (day, month, year)");
+            return;
+        }
+        
+        // Check for empty strings after trim
+        if (model.getDay().trim().isEmpty() || 
+            model.getMonth().trim().isEmpty() || 
+            model.getYear().trim().isEmpty()) {
+            model.setMessage("Error: Day, month, and year cannot be empty");
+            return;
+        }
+
+        // Now safe to call trim()
+        int year = Integer.parseInt(model.getYear().trim());
+        int month = Integer.parseInt(model.getMonth().trim());
+        int day = Integer.parseInt(model.getDay().trim());
+        // ... rest of logic
+    } catch (NumberFormatException e) {
+        model.setMessage("Error: Please enter valid numbers for day, month, and year!");
+    }
+}
+```
+
+**Impact:** Critical - Server crash vulnerability, can be exploited by malicious users or integration failures
+
+**Related Test Cases:** TC-API-007, TC-SECURITY-001
+
+---
+
+### **Defect ID: ST-007**
+**Title:** API lacks independent server-side validation, vulnerable to frontend bypass  
+**Severity:** High  
+**Priority:** High  
+**Status:** Open  
+**Reported By:** System Test Analysis  
+**Date Reported:** 2025-10-23  
+
+**Module/Component:** Backend API - Security & Validation  
+**Environment:**
+- API Endpoint: POST /check
+- Attack Vector: Direct API calls bypassing frontend validation
+
+**Description:**  
+The backend API relies heavily on frontend validation. Users can bypass client-side checks by directly calling the API endpoint with invalid data, potentially causing server errors or unexpected behavior.
+
+**Steps to Reproduce:**
+1. Bypass frontend by sending direct API request with invalid data:
+   ```json
+   POST /check
+   {
+     "day": "999",
+     "month": "99",
+     "year": "99999"
+   }
+   ```
+2. Or send extremely long strings:
+   ```json
+   {
+     "day": "111111111111111111111111111111",
+     "month": "222222222222222222222222222222",
+     "year": "333333333333333333333333333333"
+   }
+   ```
+3. Observe server response
+
+**Expected Result:**  
+- Server should validate all inputs independently
+- Return clear error messages for out-of-range values
+- Prevent integer overflow (Integer.parseInt may throw NumberFormatException for very large numbers)
+- Handle edge cases gracefully
+
+**Actual Result:**  
+- Server processes invalid range values (day=999) and returns "NOT correct date time" but doesn't explicitly reject out-of-range inputs
+- Large numbers may cause NumberFormatException but error message is generic
+
+**Suggested Fix:**
+Add server-side validation in `process()` method:
+```java
+// Validate ranges BEFORE date validation
+if (year < 1000 || year > 3000) {
+    model.setMessage("Error: Year must be between 1000 and 3000");
+    return;
+}
+if (month < 1 || month > 12) {
+    model.setMessage("Error: Month must be between 1 and 12");
+    return;
+}
+if (day < 1 || day > 31) {
+    model.setMessage("Error: Day must be between 1 and 31");
+    return;
+}
+```
+
+**Impact:** High - Security vulnerability, can cause DoS or unexpected behavior
+
+**Related Test Cases:** TC-API-008, TC-SECURITY-002
+
+---
+
+### **Defect ID: ST-008**
+**Title:** Generic error messages don't specify which field has the error  
+**Severity:** Medium  
+**Priority:** Medium  
+**Status:** Open  
+**Reported By:** System Test Analysis  
+**Date Reported:** 2025-10-23  
+
+**Module/Component:** Backend API - Error Messages  
+**Environment:**
+- API Endpoint: POST /check
+- Test Data: Multiple invalid fields simultaneously
+
+**Description:**  
+When multiple fields have errors or when user submits invalid data, the error message is generic and doesn't indicate which specific field(s) contain errors. This makes debugging and user correction difficult.
+
+**Steps to Reproduce:**
+1. Send API request with multiple invalid fields:
+   ```json
+   POST /check
+   {
+     "day": "abc",
+     "month": "xyz",
+     "year": "invalid"
+   }
+   ```
+2. Observe error message returned
+
+**Expected Result:**  
+- Clear indication of which field(s) have errors
+- Example: "Error: Day must contain only numbers (1-31). Month must contain only numbers (1-12). Year must contain only numbers (1000-3000)."
+- Or field-by-field validation: "Error: Day field contains invalid characters. Please enter numbers only."
+
+**Actual Result:**  
+Generic message: "Lỗi: Vui lòng nhập số hợp lệ cho ngày, tháng, năm!"  
+This doesn't tell user which field(s) need correction.
+
+**Suggested Fix:**
+```java
+// Validate each field separately and collect errors
+List<String> errors = new ArrayList<>();
+
+if (model.getDay() == null || model.getDay().trim().isEmpty()) {
+    errors.add("Day field is required");
+} else if (!model.getDay().trim().matches("\\d+")) {
+    errors.add("Day must contain only numbers (1-31)");
+} else {
+    try {
+        int day = Integer.parseInt(model.getDay().trim());
+        if (day < 1 || day > 31) {
+            errors.add("Day must be between 1 and 31");
+        }
+    } catch (NumberFormatException e) {
+        errors.add("Day must be a valid number");
+    }
+}
+
+// Similar for month and year...
+
+if (!errors.isEmpty()) {
+    model.setMessage("Error: " + String.join(". ", errors));
+    return;
+}
+```
+
+**Impact:** Medium - Poor user experience, especially for non-technical users
+
+**Related Test Cases:** TC-ERROR-002, TC-UX-002
+
+---
+
+### **Defect ID: ST-009**
+**Title:** Generic exception messages are in Vietnamese, inconsistent with application  
+**Severity:** Medium  
+**Priority:** Medium  
+**Status:** Open  
+**Reported By:** System Test Analysis  
+**Date Reported:** 2025-10-23  
+
+**Module/Component:** Backend API - Exception Handling  
+**Environment:**
+- Service: DateTimeCheckerService.process()
+- Exception: Generic Exception catch block
+
+**Description:**  
+When unexpected exceptions occur (non-NumberFormatException, non-IllegalArgumentException), the catch-all exception handler returns a Vietnamese error message, inconsistent with the rest of the application which should be in English for international users.
+
+**Steps to Reproduce:**
+1. Cause an unexpected exception (e.g., mock service failure, memory issues, or unexpected data format)
+2. Observe error message in response
+
+**Expected Result:**  
+- All error messages should be in English for consistency
+- Generic error: "Error: An unexpected error occurred. Please try again or contact support."
+
+**Actual Result:**  
+```java
+catch (Exception e) {
+    model.setMessage("Đã xảy ra lỗi không xác định!");  // Vietnamese
+}
+```
+
+**Suggested Fix:**
+```java
+catch (Exception e) {
+    // Log exception for debugging
+    System.err.println("Unexpected error in DateTimeCheckerService: " + e.getMessage());
+    e.printStackTrace();
+    
+    // Return user-friendly English message
+    model.setMessage("Error: An unexpected error occurred. Please try again or contact support.");
+}
+```
+
+**Impact:** Medium - Inconsistency in error messaging, affects internationalization
+
+**Related Test Cases:** TC-ERROR-003, TC-I18N-002
+
+---
+
+### **Defect ID: ST-010**
+**Title:** Input fields allow paste of invalid characters despite client-side validation  
+**Severity:** Medium  
+**Priority:** Low  
+**Status:** Open  
+**Reported By:** System Test Analysis  
+**Date Reported:** 2025-10-23  
+
+**Module/Component:** Frontend - Input Handling  
+**Environment:**
+- Browser: All browsers
+- Input fields: Day, Month, Year (type="text")
+
+**Description:**  
+While the JavaScript validation prevents direct typing of invalid characters, users can paste text containing letters or special characters into the input fields. The validation only triggers on form submission, not on paste events.
+
+**Steps to Reproduce:**
+1. Navigate to http://localhost:8080
+2. Copy text containing invalid characters: "abc123!@#"
+3. Paste into Day field (Ctrl+V or right-click paste)
+4. Observe that pasted text is accepted
+5. Click "Check" button
+6. Validation only triggers after submission
+
+**Expected Result:**  
+- Input fields should filter out invalid characters on paste
+- Either strip non-numeric characters automatically, or show immediate error on paste
+- Better UX: Only numeric characters should remain after paste
+
+**Actual Result:**  
+- Pasted invalid text is accepted into field
+- Validation only happens on "Check" button click
+- User must manually delete invalid characters
+
+**Suggested Fix:**
+Add paste event handler in `datetime-checker.js`:
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['day', 'month', 'year'];
+    
+    inputs.forEach(id => {
+        const input = document.getElementById(id);
+        
+        // Handle paste event
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            // Strip non-numeric characters
+            const numericOnly = pastedText.replace(/[^0-9]/g, '');
+            this.value = numericOnly;
+        });
+        
+        // Handle input event to filter as user types
+        input.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    });
+});
+```
+
+**Impact:** Low-Medium - Minor UX issue, but validation still works correctly on submission
+
+**Related Test Cases:** TC-UI-004, TC-INPUT-002
+
+---
+
 ## Defect Statistics
 
 ### By Severity
-- **Critical:** 0
-- **High:** 2 (ST-001, ST-003)
-- **Medium:** 2 (ST-002, ST-005)
+- **Critical:** 1 (ST-006)
+- **High:** 3 (ST-001, ST-003, ST-007)
+- **Medium:** 5 (ST-002, ST-005, ST-008, ST-009, ST-010)
 - **Low:** 1 (ST-004)
 
 ### By Status
-- **Open:** 5
+- **Open:** 10
 - **In Progress:** 0
 - **Fixed:** 0
 - **Closed:** 0
 - **Deferred:** 0
 
 ### By Module
-- **Frontend/UI:** 3 defects
-- **Backend/API:** 1 defect
-- **UX/Feedback:** 1 defect
+- **Frontend/UI:** 4 defects (ST-001, ST-003, ST-004, ST-010)
+- **Backend/API:** 6 defects (ST-002, ST-005, ST-006, ST-007, ST-008, ST-009)
+- **UX/Feedback:** 1 defect (ST-004)
 
 ---
 
@@ -329,10 +686,15 @@ try {
 
 ## Notes
 
-1. **Priority for Fix:** ST-001 and ST-003 should be fixed first as they significantly impact user experience
-2. **Testing Approach:** Recommend implementing client-side validation before server-side processing
-3. **Code Coverage:** Backend validation is solid; focus on frontend improvements
-4. **Regression Testing:** After fixes, retest all input validation scenarios
+1. **Critical Priority for Fix:** ST-006 must be fixed immediately as it causes server crashes and is a critical security vulnerability
+2. **High Priority Fixes:** ST-001, ST-003, and ST-007 should be addressed next as they significantly impact user experience and security
+3. **Testing Approach:** 
+   - Recommend implementing comprehensive server-side validation independent of frontend
+   - Test API endpoints directly to ensure they handle all edge cases
+   - Implement null checking and input validation at service layer
+4. **Code Coverage:** Backend validation needs improvement for null handling and server-side input validation
+5. **Security Considerations:** ST-006 and ST-007 represent security vulnerabilities that should be patched before production deployment
+6. **Regression Testing:** After fixes, retest all input validation scenarios including null values, out-of-range values, and direct API calls
 
 ---
 

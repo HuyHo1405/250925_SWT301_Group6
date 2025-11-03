@@ -1,0 +1,52 @@
+-------------------------------------------------------------------------------
+Test set: com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.110 s <<< FAILURE! -- in com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest
+com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.month13_shouldMentionOutOfRangeEnglish -- Time elapsed: 0.050 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected English month out-of-range message, got: 10/13/2025 is NOT correct date time! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.month13_shouldMentionOutOfRangeEnglish(DateTimeServiceDefectProbeTest.java:40)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.nonNumeric_returnsEnglishMessage -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected English error message, got: Lỗi: Vui lòng nhập số hợp lệ cho ngày, tháng, năm! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.nonNumeric_returnsEnglishMessage(DateTimeServiceDefectProbeTest.java:27)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.dayZero_shouldMentionOutOfRangeEnglish -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected English 'out of range' day message, got: 00/05/2025 is NOT correct date time! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.dayZero_shouldMentionOutOfRangeEnglish(DateTimeServiceDefectProbeTest.java:52)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.nullModel_shouldReturnEnglishError -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected English error message for empty input, got: Lỗi: Vui lòng nhập số hợp lệ cho ngày, tháng, năm! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at com.DateTimeChecker.demo.DateTimeServiceDefectProbeTest.nullModel_shouldReturnEnglishError(DateTimeServiceDefectProbeTest.java:87)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

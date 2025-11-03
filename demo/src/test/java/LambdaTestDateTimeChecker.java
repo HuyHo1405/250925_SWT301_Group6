@@ -32,10 +32,15 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class LambdaTestDateTimeChecker {
 
-    // ===== THAY THẾ THÔNG TIN CỦA BẠN VÀO ĐÂY =====
-    private final String lambdatestUsername = "nguyenminhbao28032000"; // Thay bằng Username của bạn
-    private final String lambdatestAccessKey = "LT_IIVqohXpHt0C8J73U7URt28hbq3IFXXV6yCGDsUhVSATvI5"; // Thay bằng Access Key của bạn
-    // ===============================================
+    // ===== CÁCH 1: Hardcode trực tiếp (Đơn giản nhất) =====
+    // Thay thế dòng dưới bằng Username và Access Key thực của bạn
+    private final String lambdatestUsername = "nguyenminhbao28032000";
+    private final String lambdatestAccessKey = "LT_IIVqohXpHt0C8J73U7URt28hbq3IFXXV6yCGDsUhVSATvI5";
+    
+    // ===== CÁCH 2: Dùng biến môi trường hệ thống =====
+    // Nếu muốn dùng biến môi trường, uncomment 2 dòng dưới và comment 2 dòng trên
+    // private final String lambdatestUsername = System.getenv().getOrDefault("LT_USERNAME", "your_lambdatest_username");
+    // private final String lambdatestAccessKey = System.getenv().getOrDefault("LT_ACCESS_KEY", "your_lambdatest_access_key");
 
     private final String gridUrl = "hub.lambdatest.com/wd/hub";
     private RemoteWebDriver driver;

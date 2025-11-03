@@ -13,13 +13,20 @@ setCommonPlugins();
 
 /** @type {CodeceptJS.MainConfig} */
 exports.config = {
-  tests: './tests/*_test.js',
+  tests: './tests/**/*_test.js',
   output: 'output',
   helpers: {
     Playwright: {
       browser: 'chromium',
       url: 'http://localhost',
       show: true
+    },
+    REST: {
+      endpoint: process.env.API_BASE_URL || 'http://localhost:8080',
+      defaultHeaders: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
     }
   },
   include: {

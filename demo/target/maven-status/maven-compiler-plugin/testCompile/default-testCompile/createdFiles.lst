@@ -1,4 +1,6 @@
+com\DateTimeChecker\demo\DateTimeServiceDefectProbeTest.class
 com\DateTimeChecker\demo\DateTimeCheckerApplicationTests.class
 com\DateTimeChecker\demo\DateTimeCheckerTest.class
 com\DateTimeChecker\demo\LambdaTestDateTimeChecker.class
+com\DateTimeChecker\demo\DateTimeServiceSpecTest.class
 com\DateTimeChecker\demo\DayInMonthCheckerTest.class
