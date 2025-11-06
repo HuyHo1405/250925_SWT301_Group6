@@ -88,6 +88,13 @@ public class DateTimeCheckerServiceTest {
     }
 
     @Test
+    void testProcess_InvalidNumberInputForMonth() {
+        DateTimeModel model = new DateTimeModel("2023", "abcd", "25");
+        service.process(model);
+        assertTrue(model.getMessage().contains("Vui lòng nhập số hợp lệ"));
+    }
+
+    @Test
     void testProcess_NullInput() {
         DateTimeModel model = null;
         // Service currently throws NullPointerException due to handling when model is null
